@@ -1,6 +1,5 @@
 export interface User {
-    name: string,
     deleted: boolean,
-    email: string,
-    userId: string
+    email: string | null,
+    id: string | null
 }

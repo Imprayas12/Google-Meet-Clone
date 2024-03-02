@@ -1,6 +1,7 @@
-import { initializeApp } from "firebase/app";
+import  { initializeApp } from 'firebase/app'; "firebase/app";
 import { config } from '../helpers/firebaseConfig';
 
-const app = initializeApp(config);
 
-export default app;
+
+
+export default initializeApp(config);

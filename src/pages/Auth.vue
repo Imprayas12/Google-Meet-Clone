@@ -1,5 +1,5 @@
 <template>
-    <div class="registration-form">
+    <div v-if="!signInForm" class="registration-form">
         <form @submit.prevent="register">
             <label for="email">Email: </label>
             <input v-model="email" name="email" placeholder="Enter your email" type="email" required>
@@ -11,16 +11,32 @@
             <button type="submit" :disabled="!isEmailValid || !isPasswordStrong">Register</button>
         </form>
     </div>
+    <div v-else class="registration-form">
+        <form @submit.prevent="login">
+            <label for="email">Email: </label>
+            <input v-model="email" name="email" placeholder="Enter your email" type="email" required>
+            <span v-if="!isEmailValid" class="error">Please enter a valid email address.</span>
+            <label for="password">Password: </label>
+            <input v-model="password" name="password" type="password" placeholder="Enter your password" required>
+            <button type="submit" :disabled="!isEmailValid">Login</button>
+        </form>
+    </div>
 </template>
   
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-
+import { useUserStore } from '../stores/user';
+import { useRouter, useRoute } from 'vue-router';
 
 const email = ref('');
 const password = ref('');
+const userStore = useUserStore();
 const router = useRouter();
+const route = useRoute();
+
+const signInForm = computed(() => {
+    return !(route.path == '/register')
+})
 
 const isEmailValid = computed(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,17 +52,15 @@ const register = async () => {
     if (!isEmailValid.value || !isPasswordStrong.value) {
         return;
     }
-    console.log(email.value, password.value);
-    // try {
-    //     const userCredential = await firebase.auth().createUserWithEmailAndPassword(email.value, password.value);
-    //     console.log('User registered successfully:', userCredential.user);
-    //     // Redirect to login page or any other page after registration
-    //     router.push('/login');
-    // } catch (error) {
-    //     console.error('Error registering user:', error.message);
-    //     // Handle error (e.g., show error message to user)
-    // }
+    await userStore.registerUser(email.value, password.value);
+    router.push('/');
 };
+
+const login = async () => {
+    const res = await userStore.signIn(email.value, password.value);
+    if(res) router.push('/');
+}
+
 </script>
   
 <style>
