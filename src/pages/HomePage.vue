@@ -55,13 +55,12 @@ const meeting = async () => {
   if (!peer.value) {
     await setupPeerConnection();
   }
-  
+  if(!peer.value) return;
   const meetingId = meetingLink.value;
-
-  const conn = peer.value?.connect(meetingId);
+  const conn = peer.value.connect(meetingId);
   console.log(conn);
   
-  conn?.on('open', () => {
+  conn.on('open', () => {
     console.log('Connection Established')
     conn.send('Hi!')
   })
