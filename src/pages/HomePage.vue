@@ -58,16 +58,16 @@ const meeting = async () => {
   
   const meetingId = meetingLink.value;
 
-  const conn = peer.value.connect(meetingId);
+  const conn = peer.value?.connect(meetingId);
   console.log(conn);
   
-  conn.on('open', () => {
+  conn?.on('open', () => {
     console.log('Connection Established')
     conn.send('Hi!')
   })
   mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  const call = peer.value.call(meetingId, mediaStream.value as MediaStream);
-  call.on('stream', (stream) => {
+  const call = peer.value?.call(meetingId, mediaStream.value as MediaStream);
+  call?.on('stream', (stream) => {
     const video = document.createElement('video');
     document.querySelector('.remoteVideo')?.appendChild(video);
     video.srcObject = stream;
