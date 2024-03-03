@@ -52,8 +52,12 @@ const meetingLink = ref<string>('');
 
 
 const meeting = async () => {
-  if (!peer.value) return;
+  if (!peer.value) {
+    await setupPeerConnection();
+  }
+  
   const meetingId = meetingLink.value;
+
   const conn = peer.value.connect(meetingId);
   console.log(conn);
   
@@ -73,11 +77,11 @@ const meeting = async () => {
 
 const setupPeerConnection = async () => {
   const peerId: string = await userStore.getPeerId();
-  peer.value = new Peer(peerId);
+  if(peerId) peer.value = new Peer(peerId);
+  if(!peer.value) peer.value = new Peer();
   peer.value.on('open', (id) => {
     console.log('My Peer Id is: ' + id);
   })
-
   peer.value.on('connection', (conn) => {
     conn.on('data', (data) => {
       console.log('Received', data);

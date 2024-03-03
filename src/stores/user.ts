@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { createUserWithEmailAndPassword, setPersistence, signOut, browserLocalPersistence, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { User } from '../shared/Model/User.model';
