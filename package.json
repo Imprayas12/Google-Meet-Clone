@@ -24,6 +24,5 @@
     "typescript": "^5.2.2",
     "vite": "^5.1.4",
     "vue-tsc": "^1.8.27"
-  },
-  "homepage": "https://Imprayas12.github.io/Google-Meet-Clone/"
+  }
 }
