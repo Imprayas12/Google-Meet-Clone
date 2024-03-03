@@ -23,56 +23,98 @@
       </div>
     </div>
   </div>
+  <div class="remoteVideo">
+
+  </div>
+  <button @click="userStore.signOutUser">logout</button>
+  <!-- <chatbox /> -->
+
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, onMounted, ref, watch } from 'vue';
 import { Peer } from 'peerjs';
 import { useUserStore } from '../stores/user';
+import chatbox from './chatbox.vue';
 
 const router = useRouter();
 const auth = getAuth();
 const loggedIn = ref(false);
 const userStore = useUserStore();
+const peer = ref<Peer>();
+const mediaStream = ref();
 
 
 const meetingName = ref<string>('');
 const meetingLink = ref<string>('');
 
+
+
+const meeting = async () => {
+  if (!peer.value) return;
+  const meetingId = meetingLink.value;
+  const conn = peer.value.connect(meetingId);
+  console.log(conn);
+  
+  conn.on('open', () => {
+    console.log('Connection Established')
+    conn.send('Hi!')
+  })
+  mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const call = peer.value.call(meetingId, mediaStream.value as MediaStream);
+  call.on('stream', (stream) => {
+    const video = document.createElement('video');
+    document.querySelector('.remoteVideo')?.appendChild(video);
+    video.srcObject = stream;
+    video.play();
+  });
+}
+
+const setupPeerConnection = async () => {
+  const peerId: string = await userStore.getPeerId();
+  peer.value = new Peer(peerId);
+  peer.value.on('open', (id) => {
+    console.log('My Peer Id is: ' + id);
+  })
+
+  peer.value.on('connection', (conn) => {
+    conn.on('data', (data) => {
+      console.log('Received', data);
+    });
+  })
+  peer.value.on('call', async (call) => {
+    mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    call.answer(mediaStream.value);
+    console.log('Call received');
+    call.on('stream', (stream) => {
+      const video = document.createElement('video');
+      document.querySelector('.remoteVideo')?.appendChild(video);
+      video.srcObject = stream;
+      video.play();
+    });
+  })
+}
+
 onBeforeMount(() => {
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       loggedIn.value = true;
+      await setupPeerConnection();
     } else {
       loggedIn.value = false;
     }
   })
 })
 
+onMounted(async() => {
+  if(auth.currentUser) await setupPeerConnection();
+})
 
-const meeting = async () => {
-  const peerId: string = await userStore.getPeerId();
-  const peer = new Peer(peerId);
-  const meetingId = meetingLink.value;
-  const conn = peer.connect(meetingId);
-  peer.on('open', (id) => {
-    console.log('My Peer Id is: ' + id);
-  })
-
-  peer.on('connection', (conn) => {
-    conn.on('data', (data) => {
-      console.log('Received', data);
-    });
-  })
-
-  conn.on('open', () => {
-    console.log('Connection Established.')
-    conn.send('Hi!')
-  })
-}
-
+watch(auth , async () => {
+  if(auth.currentUser) await setupPeerConnection();
+}, {deep: true, immediate: true});
 
 
 </script>
@@ -146,4 +188,4 @@ button:hover {
 .button-group {
   text-align: center;
 }
-</style>
+</style>./chatbox.vue

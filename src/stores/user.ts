@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { createUserWithEmailAndPassword, setPersistence, inMemoryPersistence, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, setPersistence, signOut, browserLocalPersistence, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { User } from '../shared/Model/User.model';
@@ -16,7 +16,7 @@ export const useUserStore = defineStore('user', () => {
             deleted: false
         }
         const r = await saveUserData(userData);
-        setPersistence(auth, inMemoryPersistence);
+        // setPersistence(auth, browserLocalPersistence);
         return r;
     }
     const saveUserData = async (data: User) => {
@@ -30,7 +30,7 @@ export const useUserStore = defineStore('user', () => {
 
     const signIn = async (email: string, password: string) => {
         const res = await signInWithEmailAndPassword(auth, email, password);
-        setPersistence(auth, inMemoryPersistence);
+        // setPersistence(auth, browserLocalPersistence);
         console.log(res.user);
         return res.user;
     }
@@ -42,7 +42,12 @@ export const useUserStore = defineStore('user', () => {
         return data?.peerId;
     }
 
+    const signOutUser = async () => {
+        await signOut(auth);
+        console.log('User logged out');
+    }
 
-    return { registerUser, signIn, getPeerId };
+
+    return { registerUser, signIn, getPeerId, signOutUser };
 
 })
