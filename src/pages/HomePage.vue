@@ -37,7 +37,6 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { onBeforeMount, onMounted, ref, watch } from 'vue';
 import { Peer } from 'peerjs';
 import { useUserStore } from '../stores/user';
-import chatbox from './chatbox.vue';
 
 const router = useRouter();
 const auth = getAuth();
