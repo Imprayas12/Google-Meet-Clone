@@ -4,7 +4,6 @@ import { config } from '../src/helpers/firebaseConfig';
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
-import './style.css'
 import App from './App.vue'
 import Router from './routes/index'
 
