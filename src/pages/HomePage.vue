@@ -57,6 +57,7 @@ import { Peer } from 'peerjs';
 import { useUserStore } from '../stores/user';
 import { Message, MessageType } from '../shared/Model/Message.model';
 import { Timestamp } from 'firebase/firestore';
+import turnConfig from '../shared/constants/turnConfig'
 
 
 
@@ -118,7 +119,7 @@ const meeting = async () => {
 const setupPeerConnection = async () => {
   const peerId: string = await userStore.getPeerId();
   if (peerId) peer.value = new Peer(peerId);
-  if (!peer.value) peer.value = new Peer();
+  if (!peer.value) peer.value = new Peer({config: turnConfig});
   peer.value.on('open', (id) => {
     meetingId.value = id;
   });
