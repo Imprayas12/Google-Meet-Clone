@@ -7,17 +7,13 @@
     </div>
 
     <div v-else class="start-meeting-container">
+      <div v-if="!connectionEstablished">
       <div class="header">
         <h1>Start a new meeting</h1>
       </div>
       <div class="content">
         <div class="input-group">
-          <label for="meetingName">Meeting name:</label>
-          <input id="meetingName" type="text" v-model="meetingName" placeholder="Enter meeting name" />
-        </div>
-        <div class="input-group">
-          <label for="meetingLink">Meeting ID:</label>
-          <input id="meetingLink" type="text" v-model="meetingLink" placeholder="Enter meeting link" />
+          <input id="meetingLink" type="text" v-model="meetingLink" placeholder="Enter the shared ID" />
         </div>
         <div class="button-group">
           <button @click="meeting">Start meeting</button>
@@ -27,6 +23,11 @@
         <span>Send this ID to your friend: {{ meetingId }} </span>
         <button @click="copyToClipboard">{{ copyText }}</button>
       </div>
+    </div>
+    <div v-if="connectionEstablished" style="text-align: center;">
+      <h3>Chat In Progress</h3>
+      <button @click="startVideoChat" style="width: 20%; background-color:#28a745; color:white; cursor:pointer;"><i class="fa-solid fa-video"></i> Video Chat</button>
+    </div>
       <div v-if="messages.length" class="chat-container">
         <div v-for="message in messages" class="message-container">
           <div :class="{ 'message-sent': message.type === 'SENT', 'message-received': message.type === 'RECEIVED' }">
@@ -35,17 +36,19 @@
           </div>
         </div>
       </div>
-      <div v-if="connectionEstablished">
-        <form @submit.prevent="sendMessage">
-          <input type="text" v-model="messageText">
-          <button>Send Message</button>
+      <div>
+        <form v-if="connectionEstablished" @submit.prevent="sendMessage" style="display:flex; justify-content:space-around; align-items:center;">
+          <input style="width:80%; padding:20px;" type="text" v-model="messageText" placeholder="Start Typing...">
+          <button style="border-radius: 50%; padding: 20px;"><i class="fa-solid fa-paper-plane"
+              style="font-size: x-large;"></i></button>
         </form>
       </div>
       <div v-if="callInProgress" class="remoteVideo"></div>
-      <button @click="userStore.signOutUser">Logout</button>
-    </div>
 
-    <!-- <chatbox /> -->
+    </div>
+    <div v-if="loggedIn" style="display:flex; justify-content:center; padding: 4%; background-color:#f8f9fa">
+      <button style="background-color: #c82333;" @click="userStore.signOutUser">Logout</button>
+    </div>
   </div>
 </template>
 
@@ -75,7 +78,6 @@ const messageText = ref('');
 const connVal = ref();
 const callInProgress = ref(false);
 
-const meetingName = ref<string>('');
 const meetingLink = ref<string>('');
 
 
@@ -105,21 +107,26 @@ const meeting = async () => {
       time: Timestamp.now()
     });
   });
-  // mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  // const call = peer.value?.call(meetingId, mediaStream.value as MediaStream);
-  // call?.on('stream', (stream) => {
-  //   const video = document.createElement('video');
-   //   callInProgress.value = true;
-  //   document.querySelector('.remoteVideo')?.appendChild(video);
-  //   video.srcObject = stream;
-  //   video.play();
-  // });
+  
+}
+
+const startVideoChat = async () => {
+  return;
+  mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const call = peer.value?.call(meetingId.value, mediaStream.value as MediaStream);
+  call?.on('stream', (stream) => {
+    const video = document.createElement('video');
+    callInProgress.value = true;
+    document.querySelector('.remoteVideo')?.appendChild(video);
+    video.srcObject = stream;
+    video.play();
+  });
 }
 
 const setupPeerConnection = async () => {
   const peerId: string = await userStore.getPeerId();
   if (peerId) peer.value = new Peer(peerId);
-  if (!peer.value) peer.value = new Peer({config: turnConfig});
+  if (!peer.value) peer.value = new Peer({ config: turnConfig });
   peer.value.on('open', (id) => {
     meetingId.value = id;
   });
@@ -138,6 +145,7 @@ const setupPeerConnection = async () => {
     mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     call.answer(mediaStream.value);
     console.log('Call received');
+    callInProgress.value = true;
     call.on('stream', (stream) => {
       callInProgress.value = true;
       const video = document.createElement('video');
@@ -174,9 +182,6 @@ onBeforeMount(() => {
 
 const formatTimestamp = (timestamp: any): string => {
   const date = timestamp.toDate();
-  // const day = date.getDate().toString().padStart(2, '0');
-  // const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  // const year = date.getFullYear().toString().slice(2);
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
@@ -266,6 +271,11 @@ watch(auth, async () => {
   border: 1px solid #ced4da;
 }
 
+.button-group {
+  display: flex;
+  justify-content: space-around;
+}
+
 .start-meeting-container .button-group button {
   padding: 10px 20px;
   font-size: 16px;
@@ -322,7 +332,7 @@ button:hover {
 
 form input[type="text"] {
   padding: 8px;
-  width: calc(100% - 80px);
+  width: 10%;
   border-radius: 5px;
   border: 1px solid #ced4da;
 }
@@ -346,6 +356,8 @@ form button:hover {
   padding: 10px;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: 55vh;
 }
 
 .message-container {
@@ -384,7 +396,8 @@ form button:hover {
     padding: 5px;
   }
 
-  .message-sent, .message-received {
+  .message-sent,
+  .message-received {
     max-width: 70%;
     word-wrap: break-word;
   }
