@@ -8,27 +8,29 @@
 
     <div v-else class="start-meeting-container">
       <div v-if="!connectionEstablished">
-      <div class="header">
-        <h1>Start a new meeting</h1>
-      </div>
-      <div class="content">
-        <div class="input-group">
-          <input id="meetingLink" type="text" v-model="meetingLink" placeholder="Enter the shared ID" />
+        <div class="header">
+          <h1>Start a new meeting</h1>
         </div>
-        <div class="button-group">
-          <button @click="meeting">Start meeting</button>
+        <div class="content">
+          <div class="input-group">
+            <input id="meetingLink" type="text" v-model="meetingLink" placeholder="Enter the shared ID" />
+          </div>
+          <div class="button-group">
+            <button @click="meeting">Start meeting</button>
+          </div>
+        </div>
+        <div class="id">
+          <span>Send this ID to your friend: {{ meetingId }} </span>
+          <button @click="copyToClipboard">{{ copyText }}</button>
         </div>
       </div>
-      <div class="id">
-        <span>Send this ID to your friend: {{ meetingId }} </span>
-        <button @click="copyToClipboard">{{ copyText }}</button>
+      <div v-if="connectionEstablished" class="actions" style="text-align: center;">
+        <h3>Chat In Progress</h3>
+        <button @click="startVideoChat"
+          style=" background-color:#28a745; color:white; cursor:pointer; font-size:medium; "><i
+            class="fa-solid fa-video"></i> Video Chat</button>
       </div>
-    </div>
-    <div v-if="connectionEstablished" style="text-align: center;">
-      <h3>Chat In Progress</h3>
-      <button @click="startVideoChat" style="width: 20%; background-color:#28a745; color:white; cursor:pointer;"><i class="fa-solid fa-video"></i> Video Chat</button>
-    </div>
-      <div v-if="messages.length" class="chat-container">
+      <div v-if="messages.length" class="chat-container" id="chatContainer">
         <div v-for="message in messages" class="message-container">
           <div :class="{ 'message-sent': message.type === 'SENT', 'message-received': message.type === 'RECEIVED' }">
             <span style="padding: 10px;">{{ message.message }}</span>
@@ -37,10 +39,11 @@
         </div>
       </div>
       <div>
-        <form v-if="connectionEstablished" @submit.prevent="sendMessage" style="display:flex; justify-content:space-around; align-items:center;">
-          <input style="width:80%; padding:20px;" type="text" v-model="messageText" placeholder="Start Typing...">
-          <button style="border-radius: 50%; padding: 20px;"><i class="fa-solid fa-paper-plane"
-              style="font-size: x-large;"></i></button>
+        <form v-if="connectionEstablished" @submit.prevent="sendMessage" style="display:flex; align-items:center;">
+          <input style="width:80%; padding:20px; border-radius: 20px;" type="text" v-model="messageText"
+            placeholder="Message...">
+          <button style="border-radius: 50%; padding: 20px; margin-left:10%;"><i class="fa-solid fa-paper-plane"
+              style="font-size: large;"></i></button>
         </form>
       </div>
       <div v-if="callInProgress" class="remoteVideo"></div>
@@ -77,10 +80,12 @@ const connectionEstablished = ref(false);
 const messageText = ref('');
 const connVal = ref();
 const callInProgress = ref(false);
+const chatContainer = ref()
 
 const meetingLink = ref<string>('');
 
 
+defineExpose({ chatContainer });
 
 const meeting = async () => {
   if (!peer.value) {
@@ -90,7 +95,6 @@ const meeting = async () => {
   const meetingId = meetingLink.value;
   const conn = peer.value.connect(meetingId);
   connVal.value = conn;
-
   conn.on('open', () => {
     connectionEstablished.value = true;
     conn.send('Hi!')
@@ -101,13 +105,25 @@ const meeting = async () => {
     })
   })
   conn.on('data', (data) => {
+
     messages.value.push({
       message: data as string,
       type: MessageType.RECIEVED,
       time: Timestamp.now()
     });
   });
-  
+  peer.value.on('call', async (call) => {
+    mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    call.answer(mediaStream.value);
+    call.on('stream', (stream) => {
+      callInProgress.value = true;
+      const video = document.createElement('video');
+      document.querySelector('.remoteVideo')?.appendChild(video);
+      video.srcObject = stream;
+      video.play();
+    });
+  });
+
 }
 
 const startVideoChat = async () => {
@@ -140,6 +156,7 @@ const setupPeerConnection = async () => {
         time: Timestamp.now()
       });
     });
+
   });
   peer.value.on('call', async (call) => {
     mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -147,6 +164,7 @@ const setupPeerConnection = async () => {
     console.log('Call received');
     callInProgress.value = true;
     call.on('stream', (stream) => {
+
       callInProgress.value = true;
       const video = document.createElement('video');
       document.querySelector('.remoteVideo')?.appendChild(video);
@@ -207,6 +225,12 @@ watch(auth, async () => {
   if (auth.currentUser) await setupPeerConnection();
 }, { deep: true, immediate: true });
 
+
+watch(messages.value, () => {
+  const container = document.getElementById('chatContainer');
+  if(!container) return;
+  container.scrollTop = container.scrollHeight + 10;
+}, {deep: true})
 
 </script>
 
@@ -306,7 +330,7 @@ watch(auth, async () => {
 
 .remoteVideo {
   height: 200px;
-  background-color: #000;
+ /* background-color: #000; */
   margin-bottom: 20px;
 }
 
@@ -391,14 +415,45 @@ form button:hover {
   justify-content: space-between;
 }
 
+
 @media screen and (max-width: 600px) {
+  .container {
+    padding: 10px;
+  }
+
+  .google-meet-sign-in button,
+  .start-meeting-container .button-group button,
+  .id button,
+  .actions button form input[type="text"],
+  form button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .start-meeting-container input[type="text"] {
+    width: 100%;
+  }
+
+  .start-meeting-container .button-group {
+    flex-direction: column;
+  }
+
+  .id {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .id button {
+    margin-top: 10px;
+  }
+
   .chat-container {
-    padding: 5px;
+    max-height: 50vh;
   }
 
   .message-sent,
   .message-received {
-    max-width: 70%;
+    max-width: 100%;
     word-wrap: break-word;
   }
 }
