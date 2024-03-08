@@ -7,7 +7,7 @@
     </div>
 
     <div v-else class="start-meeting-container">
-      <div v-if="!connectionEstablished">
+      <div v-if="!connectionEstablished && !callInProgress">
         <div class="header">
           <h1>Start a new meeting</h1>
         </div>
@@ -16,7 +16,9 @@
             <input id="meetingLink" type="text" v-model="meetingLink" placeholder="Enter the shared ID" />
           </div>
           <div class="button-group">
-            <button @click="meeting">Start meeting</button>
+            <button v-if="!videoCall" @click="meeting">Start Chat</button>
+            <button v-else @click="startVideoChat">Start Meeting</button>
+            <button @click="videoCall = !videoCall">{{ meetingMode }}</button>
           </div>
         </div>
         <div class="id">
@@ -24,13 +26,11 @@
           <button @click="copyToClipboard">{{ copyText }}</button>
         </div>
       </div>
-      <div v-if="connectionEstablished" class="actions" style="text-align: center;">
-        <h3>Chat In Progress</h3>
-        <button @click="startVideoChat"
-          style=" background-color:#28a745; color:white; cursor:pointer; font-size:medium; "><i
-            class="fa-solid fa-video"></i> Video Chat</button>
+      <div v-if="messages.length || callInProgress" class="actions" style="text-align: center;">
+        <h3 v-if="!callInProgress">Chat In Progress</h3>
+        <h3 v-else>Call In Progress</h3>
       </div>
-      <div v-if="messages.length" class="chat-container" id="chatContainer">
+      <div v-if="messages.length && !callInProgress" class="chat-container" id="chatContainer">
         <div v-for="message in messages" class="message-container">
           <div :class="{ 'message-sent': message.type === 'SENT', 'message-received': message.type === 'RECEIVED' }">
             <span style="padding: 10px;">{{ message.message }}</span>
@@ -39,7 +39,7 @@
         </div>
       </div>
       <div>
-        <form v-if="connectionEstablished" @submit.prevent="sendMessage" style="display:flex; align-items:center;">
+        <form v-if="messages.length" @submit.prevent="sendMessage" style="display:flex; align-items:center;">
           <input style="width:80%; padding:20px; border-radius: 20px;" type="text" v-model="messageText"
             placeholder="Message...">
           <button style="border-radius: 50%; padding: 20px; margin-left:10%;"><i class="fa-solid fa-paper-plane"
@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { onBeforeMount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeMount, onMounted, ref, watch } from 'vue';
 import { Peer } from 'peerjs';
 import { useUserStore } from '../stores/user';
 import { Message, MessageType } from '../shared/Model/Message.model';
@@ -83,7 +83,10 @@ const callInProgress = ref(false);
 const chatContainer = ref()
 
 const meetingLink = ref<string>('');
-
+const videoCall = ref(false);
+const meetingMode = computed(() => {
+  return videoCall.value ? 'Switch to Chat' : 'Switch to Video Call';
+})
 
 defineExpose({ chatContainer });
 
@@ -105,31 +108,21 @@ const meeting = async () => {
     })
   })
   conn.on('data', (data) => {
-
     messages.value.push({
       message: data as string,
       type: MessageType.RECIEVED,
       time: Timestamp.now()
     });
   });
-  peer.value.on('call', async (call) => {
-    mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    call.answer(mediaStream.value);
-    call.on('stream', (stream) => {
-      callInProgress.value = true;
-      const video = document.createElement('video');
-      document.querySelector('.remoteVideo')?.appendChild(video);
-      video.srcObject = stream;
-      video.play();
-    });
-  });
-
 }
 
 const startVideoChat = async () => {
-  return;
+  if (!peer.value) await setupPeerConnection();
+  if (!peer.value) return;
+  const meetingId = meetingLink.value;
+  peer.value.connect(meetingId);
   mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  const call = peer.value?.call(meetingId.value, mediaStream.value as MediaStream);
+  const call = peer.value?.call(meetingId, mediaStream.value as MediaStream);
   call?.on('stream', (stream) => {
     const video = document.createElement('video');
     callInProgress.value = true;
@@ -164,12 +157,14 @@ const setupPeerConnection = async () => {
     console.log('Call received');
     callInProgress.value = true;
     call.on('stream', (stream) => {
-
       callInProgress.value = true;
-      const video = document.createElement('video');
-      document.querySelector('.remoteVideo')?.appendChild(video);
-      video.srcObject = stream;
-      video.play();
+      let remoteVideo = document.querySelector('.remoteVideo');
+      if (!remoteVideo?.querySelector('video')) {
+        const video = document.createElement('video');
+        remoteVideo?.appendChild(video);
+        video.srcObject = stream;
+        video.play();
+      }
     });
   });
 };
@@ -228,9 +223,9 @@ watch(auth, async () => {
 
 watch(messages.value, () => {
   const container = document.getElementById('chatContainer');
-  if(!container) return;
+  if (!container) return;
   container.scrollTop = container.scrollHeight + 10;
-}, {deep: true})
+}, { deep: true })
 
 </script>
 
@@ -329,8 +324,8 @@ watch(messages.value, () => {
 }
 
 .remoteVideo {
-  height: 200px;
- /* background-color: #000; */
+  height: 500px;
+  /* background-color: #000; */
   margin-bottom: 20px;
 }
 
