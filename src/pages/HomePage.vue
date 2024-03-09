@@ -352,8 +352,8 @@ watch(messages.value, () => {
   height: 15vh;
   width: 20vh;
   position: absolute;
-  top: 44vh;
-  left: 40vw;
+  bottom: 0;
+  right: 0;
   border-radius: 10px;
 }
 
