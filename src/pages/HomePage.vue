@@ -46,7 +46,10 @@
               style="font-size: large;"></i></button>
         </form>
       </div>
-      <div v-if="callInProgress" class="remoteVideo"></div>
+      <div v-if="callInProgress" class="remoteVideo">
+        <div class="ownVideo"></div>
+      </div>
+
 
     </div>
     <div v-if="loggedIn" style="display:flex; justify-content:center; padding: 4%; background-color:#f8f9fa">
@@ -129,6 +132,13 @@ const startVideoChat = async () => {
     document.querySelector('.remoteVideo')?.appendChild(video);
     video.srcObject = stream;
     video.play();
+    let ownVideo = document.querySelector('.ownVideo');
+    if (!ownVideo?.querySelector('video')) {
+      const video = document.createElement('video');
+      ownVideo?.appendChild(video);
+      video.srcObject = mediaStream.value;
+      video.play();
+    }
   });
 }
 
@@ -163,6 +173,13 @@ const setupPeerConnection = async () => {
         const video = document.createElement('video');
         remoteVideo?.appendChild(video);
         video.srcObject = stream;
+        video.play();
+      }
+      let ownVideo = document.querySelector('.ownVideo');
+      if (!ownVideo?.querySelector('video')) {
+        const video = document.createElement('video');
+        ownVideo?.appendChild(video);
+        video.srcObject = mediaStream.value;
         video.play();
       }
     });
@@ -327,13 +344,24 @@ watch(messages.value, () => {
   height: 500px;
   /* background-color: #000; */
   margin-bottom: 20px;
+  position: relative;
+  border-radius: 10px;
+}
+
+.ownVideo {
+  height: 15vh;
+  width: 20vh;
+  position: absolute;
+  top: 44vh;
+  left: 40vw;
+  border-radius: 10px;
 }
 
 .remoteVideo video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 5px;
+  border-radius: 10px;
 }
 
 button {
