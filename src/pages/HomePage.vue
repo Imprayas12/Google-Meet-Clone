@@ -125,6 +125,7 @@ const startVideoChat = async () => {
   const meetingId = meetingLink.value;
   peer.value.connect(meetingId);
   mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const localVideo = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
   const call = peer.value?.call(meetingId, mediaStream.value as MediaStream);
   call?.on('stream', (stream) => {
     const video = document.createElement('video');
@@ -136,7 +137,7 @@ const startVideoChat = async () => {
     if (!ownVideo?.querySelector('video')) {
       const video = document.createElement('video');
       ownVideo?.appendChild(video);
-      video.srcObject = mediaStream.value;
+      video.srcObject = localVideo;
       video.play();
     }
   });
@@ -163,6 +164,7 @@ const setupPeerConnection = async () => {
   });
   peer.value.on('call', async (call) => {
     mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const localVideo = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
     call.answer(mediaStream.value);
     console.log('Call received');
     callInProgress.value = true;
@@ -179,7 +181,7 @@ const setupPeerConnection = async () => {
       if (!ownVideo?.querySelector('video')) {
         const video = document.createElement('video');
         ownVideo?.appendChild(video);
-        video.srcObject = mediaStream.value;
+        video.srcObject = localVideo;
         video.play();
       }
     });
