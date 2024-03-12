@@ -266,7 +266,6 @@ watch(messages.value, () => {
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-  text-align: center;
   align-items: center;
   justify-content: space-evenly;
   margin-top: 100px;

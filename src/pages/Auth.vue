@@ -74,7 +74,6 @@ const login = async () => {
     border-radius: 20px;
     display: flex;
     flex-direction: column;
-    text-align: center;
     align-items: center;
     justify-content: space-evenly;
     margin-top: 100px;
@@ -82,6 +81,7 @@ const login = async () => {
     width: 50%;
     margin-left: auto;
     margin-right: auto;
+    min-width: 350px;
 }
 
 form {
