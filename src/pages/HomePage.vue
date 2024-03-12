@@ -5,11 +5,11 @@
       <button @click="router.push('/register')">Register</button>
       <button @click="router.push('/login')">Login</button>
     </div>
-
     <div v-else class="start-meeting-container">
+    <div>
       <div v-if="!connectionEstablished && !callInProgress">
         <div class="header">
-          <h1>Start a new meeting</h1>
+          <h1 style="color: #fff;">Start a new meeting</h1>
         </div>
         <div class="content">
           <div class="input-group">
@@ -26,7 +26,7 @@
           <button @click="copyToClipboard">{{ copyText }}</button>
         </div>
       </div>
-      <div v-if="messages.length || callInProgress" class="actions" style="text-align: center;">
+      <div v-if="messages.length || callInProgress" class="actions" style="text-align: center;color: #fff;">
         <h3 v-if="!callInProgress">Chat In Progress</h3>
         <h3 v-else>Call In Progress</h3>
       </div>
@@ -52,9 +52,10 @@
 
 
     </div>
-    <div v-if="loggedIn" style="display:flex; justify-content:center; padding: 4%; background-color:#f8f9fa">
-      <button style="background-color: #c82333;" @click="userStore.signOutUser">Logout</button>
+    <div v-if="loggedIn" style="display:flex; justify-content:center; padding: 4%;">
+      <button @click="userStore.signOutUser">Logout</button>
     </div>
+  </div>
   </div>
 </template>
 
@@ -125,7 +126,7 @@ const startVideoChat = async () => {
   const meetingId = meetingLink.value;
   peer.value.connect(meetingId);
   mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  const localVideo = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
+  const localVideo = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
   const call = peer.value?.call(meetingId, mediaStream.value as MediaStream);
   call?.on('stream', (stream) => {
     const video = document.createElement('video');
@@ -164,7 +165,7 @@ const setupPeerConnection = async () => {
   });
   peer.value.on('call', async (call) => {
     mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const localVideo = await navigator.mediaDevices.getUserMedia({video: true, audio: false});
+    const localVideo = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     call.answer(mediaStream.value);
     console.log('Call received');
     callInProgress.value = true;
@@ -258,27 +259,48 @@ watch(messages.value, () => {
 
 .google-meet-sign-in {
   text-align: center;
+  background: rgb(2, 0, 36);
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 76, 121, 1) 23%, rgba(0, 212, 255, 1) 100%);
+  height: 400px;
+  color: whitesmoke;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  justify-content: space-evenly;
+  margin-top: 100px;
+  box-shadow: 0px 0px 10px white;
 }
 
 .google-meet-sign-in h1 {
   font-size: 24px;
   margin-bottom: 20px;
+  font-family: 'Noto Sans' !important;
 }
 
 .google-meet-sign-in button {
-  padding: 10px 20px;
+  padding: 20px 30px;
   margin: 0 10px;
   font-size: 16px;
-  background-color: #007bff;
+  background-color: #ced4da;
   color: #fff;
   border: none;
   cursor: pointer;
+  width: 60%;
+  color: black;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: 0.7s;
 }
 
 .start-meeting-container {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 5px;
+  background: rgb(2, 0, 36);
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 76, 121, 1) 23%, rgba(0, 212, 255, 1) 100%);
+  padding: 40px;
+  border-radius: 20px;
+  margin-top: 50px;
+  box-shadow: 0px 0px 10px white;
 }
 
 .start-meeting-container .header {
@@ -317,8 +339,8 @@ watch(messages.value, () => {
 .start-meeting-container .button-group button {
   padding: 10px 20px;
   font-size: 16px;
-  background-color: #28a745;
-  color: #fff;
+  background-color: #ced4da;
+  color: #000;
   border: none;
   cursor: pointer;
 }
@@ -335,8 +357,9 @@ watch(messages.value, () => {
 .id button {
   padding: 5px 10px;
   font-size: 14px;
-  background-color: #007bff;
-  color: #fff;
+  background-color: #ced4da;
+  color: #000;
+  transition: 0.7s;
   border: none;
   cursor: pointer;
   margin-left: 10px;
@@ -344,18 +367,19 @@ watch(messages.value, () => {
 
 .remoteVideo {
   height: 500px;
-  /* background-color: #000; */
+  background-color: #000;
   margin-bottom: 20px;
   position: relative;
   border-radius: 10px;
 }
 
 .ownVideo {
-  height: 15vh;
-  width: 20vh;
+  height: 20vh;
+  width: 15vh;
   position: absolute;
   bottom: 0;
   right: 0;
+  margin: 5px;
   border-radius: 10px;
 }
 
@@ -369,14 +393,18 @@ watch(messages.value, () => {
 button {
   padding: 10px 20px;
   font-size: 16px;
-  background-color: #dc3545;
-  color: #fff;
+  color: #000;
   border: none;
+  transition: 0.7s;
   cursor: pointer;
 }
 
 button:hover {
-  background-color: #c82333;
+  background: rgb(2, 0, 36);
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(11, 123, 126, 1) 45%, rgba(0, 212, 255, 1) 82%);
+  color: white !important;
+  font-family: "Noto Sans", sans-serif;
+  box-shadow: 0px 0px 10px white;
 }
 
 form input[type="text"] {
@@ -453,6 +481,7 @@ form button:hover {
   form button {
     padding: 8px 16px;
     font-size: 14px;
+    margin: 2px;
   }
 
   .start-meeting-container input[type="text"] {
