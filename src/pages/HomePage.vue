@@ -48,6 +48,7 @@
       </div>
       <div v-if="callInProgress" class="remoteVideo">
         <div class="ownVideo"></div>
+        <button @click="endCall" class="end-call-button">End Call</button>
       </div>
 
 
@@ -231,6 +232,10 @@ const copyToClipboard = () => {
       console.error('Failed to copy text:', error);
     });
 }
+
+const endCall = () => {
+  location.reload();
+};
 
 onMounted(async () => {
   if (auth.currentUser) await setupPeerConnection();
@@ -467,6 +472,22 @@ form button:hover {
   justify-content: space-between;
 }
 
+.end-call-button {
+  background-color: #ff4d4d;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 15px 25px;
+  transition: background-color 0.3s, transform 0.3s;
+  margin-top: 20px;
+}
+
+.end-call-button:hover {
+  background-color: #ff1a1a;
+  transform: scale(1.05);
+}
 
 @media screen and (max-width: 600px) {
   .container {

@@ -1,27 +1,22 @@
 <template>
-    <div v-if="!signInForm" class="registration-form">
-        <form @submit.prevent="register">
-            <label for="email">Email </label>
-            <input v-model="email" name="email" placeholder="Enter your email" type="email" required>
-            <span v-if="!isEmailValid" class="error">Please enter a valid email address.</span>
-            <label for="password">Password </label>
-            <input v-model="password" name="password" type="password" placeholder="Enter your password" required>
-            <span v-if="!isPasswordStrong" class="error">Password must be at least 8 characters long and contain at
-                least
-                one number, one uppercase letter, and one lowercase letter.</span>
-            <button type="submit" :disabled="!isEmailValid || !isPasswordStrong">Register</button>
-        </form>
+  <div class="auth-container">
+    <div class="form-container">
+      <h2>{{ signInForm ? 'Sign In' : 'Register' }}</h2>
+      <form @submit.prevent="signInForm ? login() : register()">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" v-model="email" id="email" required />
+          <span v-if="!isEmailValid" class="error">Invalid email address</span>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" v-model="password" id="password" required />
+          <span v-if="!isPasswordStrong" class="error">Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a number</span>
+        </div>
+        <button type="submit">{{ signInForm ? 'Sign In' : 'Register' }}</button>
+      </form>
     </div>
-    <div v-else class="registration-form">
-        <form @submit.prevent="login">
-            <label for="email">Email </label>
-            <input v-model="email" name="email" placeholder="Enter your email" type="email" required>
-            <span v-if="!isEmailValid" class="error">Please enter a valid email address.</span>
-            <label for="password">Password </label>
-            <input v-model="password" name="password" type="password" placeholder="Enter your password" required>
-            <button type="submit" :disabled="!isEmailValid">Login</button>
-        </form>
-    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -65,73 +60,74 @@ const login = async () => {
 </script>
 
 <style scoped>
-.registration-form {
-    text-align: center;
-    background: rgb(2, 0, 36);
-    background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(9, 76, 121, 1) 23%, rgba(0, 212, 255, 1) 100%);
-    height: 400px;
-    color: whitesmoke;
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-evenly;
-    margin-top: 100px;
-    box-shadow: 0px 0px 10px white;
-    width: 50%;
-    margin-left: auto;
-    margin-right: auto;
-    min-width: 350px;
+body {
+  background-color: #121212;
+  color: #ffffff;
+  font-family: 'Arial', sans-serif;
 }
 
-form {
-    display: flex;
-    flex-direction: column;
-    width: 70%;
-    text-align: center;
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.form-container {
+  background: #1e1e1e;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
 }
 
 label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    text-align: start;
+  display: block;
+  margin-bottom: 5px;
+  color: #ffffff;
 }
 
 input {
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #333;
+  color: #fff;
 }
 
 button {
-    padding: 20px 30px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 5%;
-    font-size: 16px;
-    background-color: #ced4da;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    width: 60%;
-    color: black;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: 0.7s;
+  padding: 15px 25px;
+  font-size: 16px;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: 0.3s;
 }
 
 button:hover {
-    background: rgb(2, 0, 36);
-    background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(11, 123, 126, 1) 45%, rgba(0, 212, 255, 1) 82%);
-    color: white;
-    font-family: "Noto Sans", sans-serif;
-    box-shadow: 0px 0px 10px white;
+  background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgb(33, 33, 34) 45%, rgb(67, 72, 73) 82%);
+  color: white;
 }
-
+xs
 .error {
-    color: #ced4da;
-    font-size: 14px;
-    margin-top: 5px;
+  color: #ff6b6b;
+  font-size: 14px;
 }
 </style>
